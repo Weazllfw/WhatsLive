@@ -100,9 +100,9 @@ export default function SettingsModal({ onClose }: Props) {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  const isPro     = licInfo?.tier === 'pro' && licInfo?.valid;
-  const atLimit   = licInfo != null && licInfo.device_limit > 0 && licInfo.device_count >= licInfo.device_limit;
-  const limitLabel = licInfo?.device_limit === -1 ? 'Unlimited' : String(licInfo?.device_limit ?? 25);
+  const isPro      = licInfo?.tier === 'pro' && licInfo?.valid;
+  const atLimit    = licInfo != null && licInfo.device_limit > 0 && licInfo.device_count >= licInfo.device_limit;
+  const limitLabel = licInfo?.device_limit === -1 ? 'Unlimited' : String(licInfo?.device_limit ?? '—');
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -147,12 +147,6 @@ export default function SettingsModal({ onClose }: Props) {
                   )}
                 </div>
 
-                {!isPro && (
-                  <p className="lic-cta">
-                    Upgrade to <strong>WhatsLive Pro</strong> to monitor unlimited devices, enable webhooks, and access remote relay.
-                    <a href="https://whatslive.io/pricing" target="_blank" rel="noreferrer"> View pricing →</a>
-                  </p>
-                )}
               </>
             ) : (
               <p className="lic-loading">Loading license info…</p>
@@ -189,13 +183,6 @@ export default function SettingsModal({ onClose }: Props) {
         {/* ── Notifications tab ──────────────────────────────────────── */}
         {tab === 'notifications' && (
           <div className="settings-section">
-            {!isPro && (
-              <div className="notif-pro-gate">
-                <span>🔒</span>
-                <span>Webhook and Slack notifications require <strong>WhatsLive Pro</strong>.</span>
-              </div>
-            )}
-
             <div className="field-group">
               <label className="field-label">Webhook URL</label>
               <p className="field-hint">Receives a POST request on every state change.</p>
@@ -205,7 +192,6 @@ export default function SettingsModal({ onClose }: Props) {
                 placeholder="https://your-endpoint.com/webhook"
                 value={notif.webhook_url}
                 onChange={e => setNotif(n => ({ ...n, webhook_url: e.target.value }))}
-                disabled={!isPro}
               />
             </div>
 
@@ -218,7 +204,6 @@ export default function SettingsModal({ onClose }: Props) {
                 placeholder="https://hooks.slack.com/services/…"
                 value={notif.slack_webhook_url}
                 onChange={e => setNotif(n => ({ ...n, slack_webhook_url: e.target.value }))}
-                disabled={!isPro}
               />
             </div>
 
@@ -229,10 +214,10 @@ export default function SettingsModal({ onClose }: Props) {
             )}
 
             <div className="settings-actions">
-              <button className="btn btn--primary" onClick={saveNotifications} disabled={notifBusy || !isPro}>
+              <button className="btn btn--primary" onClick={saveNotifications} disabled={notifBusy}>
                 {notifBusy ? 'Saving…' : 'Save'}
               </button>
-              <button className="btn btn--ghost" onClick={testNotification} disabled={notifBusy || !isPro}>
+              <button className="btn btn--ghost" onClick={testNotification} disabled={notifBusy}>
                 Send test
               </button>
             </div>

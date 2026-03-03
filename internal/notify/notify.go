@@ -1,5 +1,5 @@
 // Package notify sends webhook and Slack notifications when device state changes.
-// It is called from the state-change event loop in main.go (Pro tier only).
+// It is called from the state-change event loop in main.go.
 package notify
 
 import (

@@ -128,22 +128,19 @@ func run(ctx context.Context, dbPath, subnetFlag, addrFlag string) {
 				LatencyMs: ev.LatencyMs,
 			}))
 
-			// Fire webhook/Slack only on meaningful transitions (Pro tier only).
+			// Fire webhook/Slack on meaningful transitions.
 			if ev.OldState != "" && ev.NewState != ev.OldState {
-				tierOK := lic != nil && lic.Tier() == license.TierPro
-				if tierOK {
-					webhookURL, _ := dbpkg.Setting(database, "webhook_url")
-					slackURL, _   := dbpkg.Setting(database, "slack_webhook_url")
-					if webhookURL != "" || slackURL != "" {
-						label := ev.DeviceMAC
-						if row := database.QueryRow(`SELECT COALESCE(NULLIF(label,''), hostname, mac) FROM devices WHERE mac = ?`, ev.DeviceMAC); row != nil {
-							_ = row.Scan(&label)
-						}
-						go notifier.Send(notify.Config{
-							WebhookURL:      webhookURL,
-							SlackWebhookURL: slackURL,
-						}, ev.DeviceMAC, label, ev.OldState, ev.NewState, ev.At)
+				webhookURL, _ := dbpkg.Setting(database, "webhook_url")
+				slackURL, _   := dbpkg.Setting(database, "slack_webhook_url")
+				if webhookURL != "" || slackURL != "" {
+					label := ev.DeviceMAC
+					if row := database.QueryRow(`SELECT COALESCE(NULLIF(label,''), hostname, mac) FROM devices WHERE mac = ?`, ev.DeviceMAC); row != nil {
+						_ = row.Scan(&label)
 					}
+					go notifier.Send(notify.Config{
+						WebhookURL:      webhookURL,
+						SlackWebhookURL: slackURL,
+					}, ev.DeviceMAC, label, ev.OldState, ev.NewState, ev.At)
 				}
 			}
 		}
