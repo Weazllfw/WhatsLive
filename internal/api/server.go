@@ -422,7 +422,7 @@ func (s *Server) handleSetVisibility(c *gin.Context) {
 // --- custom edge handlers ---
 
 func (s *Server) handleGetEdges(c *gin.Context) {
-	rows, err := s.db.Query(`SELECT id, source_mac, target_mac, label FROM custom_edges`)
+	rows, err := s.db.Query(`SELECT id, source_mac, target_mac, color, label FROM custom_edges`)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -431,7 +431,7 @@ func (s *Server) handleGetEdges(c *gin.Context) {
 	var edges []ws.CustomEdge
 	for rows.Next() {
 		var e ws.CustomEdge
-		if err := rows.Scan(&e.ID, &e.SourceMAC, &e.TargetMAC, &e.Label); err != nil {
+		if err := rows.Scan(&e.ID, &e.SourceMAC, &e.TargetMAC, &e.Color, &e.Label); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -447,32 +447,43 @@ func (s *Server) handleCreateEdge(c *gin.Context) {
 	var body struct {
 		SourceMAC string `json:"source_mac" binding:"required"`
 		TargetMAC string `json:"target_mac" binding:"required"`
+		Color     string `json:"color"`
 		Label     string `json:"label"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if body.Color == "" {
+		body.Color = "#7c3aed"
+	}
 	res, err := s.db.Exec(
-		`INSERT OR IGNORE INTO custom_edges (source_mac, target_mac, label) VALUES (?, ?, ?)`,
-		body.SourceMAC, body.TargetMAC, body.Label,
+		`INSERT OR IGNORE INTO custom_edges (source_mac, target_mac, color, label) VALUES (?, ?, ?, ?)`,
+		body.SourceMAC, body.TargetMAC, body.Color, body.Label,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	id, _ := res.LastInsertId()
-	c.JSON(http.StatusOK, ws.CustomEdge{ID: id, SourceMAC: body.SourceMAC, TargetMAC: body.TargetMAC, Label: body.Label})
+	c.JSON(http.StatusOK, ws.CustomEdge{ID: id, SourceMAC: body.SourceMAC, TargetMAC: body.TargetMAC, Color: body.Color, Label: body.Label})
 }
 
 func (s *Server) handleUpdateEdge(c *gin.Context) {
 	id := c.Param("id")
 	var body struct {
+		Color *string `json:"color"`
 		Label *string `json:"label"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+	if body.Color != nil {
+		if _, err := s.db.Exec(`UPDATE custom_edges SET color = ? WHERE id = ?`, *body.Color, id); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 	if body.Label != nil {
 		if _, err := s.db.Exec(`UPDATE custom_edges SET label = ? WHERE id = ?`, *body.Label, id); err != nil {

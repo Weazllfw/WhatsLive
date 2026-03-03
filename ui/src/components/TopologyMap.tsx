@@ -132,7 +132,6 @@ interface Props {
   showAutoEdges:    boolean;
   hiddenAutoEdges:   ReadonlySet<string>;
   hiddenCustomEdges: ReadonlySet<number>;
-  edgeColors:        Record<number, string>;
   theme:            Theme;
   // Workspace
   workspaceId:          number;
@@ -154,7 +153,7 @@ interface Props {
 
 export function TopologyMap({
   devices, customEdges, groups, selectedMAC, showHidden,
-  connectingMAC, showAutoEdges, hiddenAutoEdges, hiddenCustomEdges, edgeColors, theme,
+  connectingMAC, showAutoEdges, hiddenAutoEdges, hiddenCustomEdges, theme,
   workspaceId, workspaceGroupId, workspacePositions,
   onSelectDevice, onToggleHidden, onCreateEdge, onDeleteEdge, onConnectEnd,
   onHideAutoEdge, onToggleAutoEdges, onShowAllEdges, onEdgeColorChange, onGroupMoved,
@@ -603,7 +602,6 @@ export function TopologyMap({
   // ── Sync custom edges ────────────────────────────────────────────────────────
   const syncCustomEdges = useCallback((
     edges: CustomEdge[],
-    colors: Record<number, string>,
     hiddenEdges: ReadonlySet<number>,
   ) => {
     const cy = cyRef.current;
@@ -616,7 +614,7 @@ export function TopologyMap({
     edges.forEach(e => {
       if (hiddenEdges.has(e.id)) return; // skip hidden
       const eid   = `ce-${e.id}`;
-      const color = colors[e.id] ?? COLOR_PRESETS[0];
+      const color = e.color || COLOR_PRESETS[0];
       // grp:{id} references resolve to compound node IDs (group-{id})
       const srcId = e.source_mac.startsWith('grp:') ? `group-${e.source_mac.slice(4)}` : e.source_mac;
       const tgtId = e.target_mac.startsWith('grp:') ? `group-${e.target_mac.slice(4)}` : e.target_mac;
@@ -644,8 +642,8 @@ export function TopologyMap({
   // Deps include `devices`, `groups`, and `workspaceGroupId` so that edges are
   // retried whenever their endpoints become available (new device, group created,
   // workspace switch that adds nodes back to the canvas).
-  useEffect(() => { syncCustomEdges(customEdges, edgeColors, hiddenCustomEdges); },
-    [devices, groups, workspaceGroupId, customEdges, edgeColors, hiddenCustomEdges, syncCustomEdges]);
+  useEffect(() => { syncCustomEdges(customEdges, hiddenCustomEdges); },
+    [devices, groups, workspaceGroupId, customEdges, hiddenCustomEdges, syncCustomEdges]);
 
   // ── Workspace position restoration ──────────────────────────────────────────
   // Fires only when workspacePositions changes reference (i.e. on workspace switch).

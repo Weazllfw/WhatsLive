@@ -6,6 +6,8 @@ WhatsLive auto-discovers every device on your LAN, classifies it (router, switch
 
 Know your network is working before employees tell you it's broken.
 
+![WhatsLive topology map showing grouped devices, live status indicators, and custom connections](Docs/Assets/Screenshot%202026-03-03%20170946.png)
+
 ---
 
 ## Background
@@ -122,6 +124,19 @@ All settings are stored in the SQLite database and configurable through the web 
 | `discovery_interval_s` | `300` | Full subnet sweep interval in seconds |
 | `heartbeat_interval_s` | `30` | Per-device ping interval in seconds |
 | `bind_addr` | `0.0.0.0:8080` | HTTP server bind address |
+
+---
+
+## Database Maintenance
+
+WhatsLive stores all state in a single SQLite file (`whatslive.db`). Most data is bounded, but the `check_results` table grows continuously with raw ping results.
+
+**Growth rate:** at the default 30-second heartbeat, 50 devices generates roughly 5,000 rows per day. The poller automatically prunes rows older than 30 days on every discovery cycle (every 5 minutes), so the table stays bounded in normal operation. If you need to reclaim space manually:
+
+```sql
+DELETE FROM check_results WHERE checked_at < datetime('now', '-30 days');
+VACUUM;
+```
 
 ---
 

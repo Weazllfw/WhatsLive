@@ -48,6 +48,7 @@ export interface CustomEdge {
   id:         number;
   source_mac: string;
   target_mac: string;
+  color:      string;
   label:      string;
 }
 

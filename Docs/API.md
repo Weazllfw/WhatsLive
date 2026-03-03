@@ -317,9 +317,12 @@ Returns all user-drawn connections.
 {
   "source_mac": "aa:bb:cc:dd:ee:ff",
   "target_mac": "11:22:33:44:55:66",
+  "color":      "#7c3aed",
   "label":      ""
 }
 ```
+
+`color` is optional; defaults to `#7c3aed` if omitted.
 
 **Response `201`** — created edge object.
 
@@ -330,7 +333,7 @@ Returns all user-drawn connections.
 **Request body** (all optional)
 
 ```json
-{ "label": "WAN uplink" }
+{ "color": "#0ea5e9", "label": "WAN uplink" }
 ```
 
 **Response `200`**

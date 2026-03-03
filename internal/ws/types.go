@@ -62,6 +62,7 @@ type CustomEdge struct {
 	ID        int64  `json:"id"`
 	SourceMAC string `json:"source_mac"`
 	TargetMAC string `json:"target_mac"`
+	Color     string `json:"color"`
 	Label     string `json:"label"`
 }
 

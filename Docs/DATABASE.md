@@ -13,6 +13,7 @@ WhatsLive uses a single SQLite file (`whatslive.db` by default) managed by `mode
 | `003_custom_devices.sql` | Adds `is_custom` to `devices` |
 | `004_workspaces.sql` | Creates `workspaces`, `workspace_positions`; inserts the permanent Overview workspace |
 | `005_enhancements.sql` | Adds `last_latency_ms`, `notes` to `devices`; adds `label` to `custom_edges` |
+| `006_edge_color.sql` | Adds `color` column to `custom_edges` (default `#7c3aed`) |
 
 Migrations are embedded in the binary via `go:embed`. Applied automatically and idempotently on every startup.
 
@@ -68,10 +69,9 @@ User-drawn connections between two nodes. Source and target are MAC addresses or
 | `id` | INTEGER PRIMARY KEY | Auto-increment |
 | `source_mac` | TEXT | Source node identifier |
 | `target_mac` | TEXT | Target node identifier |
+| `color` | TEXT | Hex colour for the edge line, default `#7c3aed` |
 | `label` | TEXT | Optional text label on the edge, default empty |
 | UNIQUE | (`source_mac`, `target_mac`) | Prevents duplicate edges |
-
-Note: edge colours are stored in the browser (`localStorage`) and are not persisted to the database.
 
 ---
 
@@ -140,6 +140,12 @@ Raw per-device ping results. Not currently surfaced in the UI but available for 
 | `success` | INTEGER | 1 = reachable, 0 = unreachable |
 | `latency_ms` | INTEGER | RTT in milliseconds, nullable |
 | `checked_at` | DATETIME | Default `CURRENT_TIMESTAMP` |
+
+**Growth rate:** at the default 30-second heartbeat with 50 devices, this table adds ~5,000 rows/day (~1.8 M rows/year). The poller automatically prunes rows older than 30 days on every discovery scan (every 5 minutes by default), keeping the table bounded at roughly 150,000 rows. If you disable the poller or need manual cleanup, run:
+
+```sql
+DELETE FROM check_results WHERE checked_at < datetime('now', '-30 days');
+```
 
 ---
 

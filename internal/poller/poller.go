@@ -76,6 +76,24 @@ func runOneScan(ctx context.Context, database *sql.DB, subnet string, fsm *state
 		}
 		fsm.EnsureDevice(d.MAC)
 	}
+
+	// Prune check_results older than 30 days to prevent unbounded database growth.
+	// At a 30-second heartbeat with 50 devices this table grows at ~5,000 rows/day.
+	pruneCheckResults(database)
+}
+
+// pruneCheckResults deletes check_results rows older than 30 days.
+func pruneCheckResults(database *sql.DB) {
+	res, err := database.Exec(
+		`DELETE FROM check_results WHERE checked_at < datetime('now', '-30 days')`,
+	)
+	if err != nil {
+		log.Printf("poller: prune check_results: %v", err)
+		return
+	}
+	if n, _ := res.RowsAffected(); n > 0 {
+		log.Printf("poller: pruned %d old check_results rows", n)
+	}
 }
 
 // runHeartbeat runs the 30-second heartbeat loop.

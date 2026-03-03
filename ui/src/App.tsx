@@ -100,11 +100,6 @@ export default function App() {
     catch { return new Set<string>(); }
   });
 
-  // Custom edge colors (keyed by edge DB id)
-  const [edgeColors, setEdgeColors] = useState<Record<number, string>>(() => {
-    try { return JSON.parse(localStorage.getItem('wl-edge-colors') ?? '{}'); }
-    catch { return {}; }
-  });
 
   // Hidden custom edges (hidden but NOT deleted — keyed by edge DB id)
   const [hiddenCustomEdges, setHiddenCustomEdges] = useState<Set<number>>(() => {
@@ -276,7 +271,6 @@ export default function App() {
   async function handleDeleteEdge(id: number) {
     await fetch(`/api/edges/${id}`, { method: 'DELETE' });
     setCustomEdges(prev => prev.filter(e => e.id !== id));
-    setEdgeColors(prev => { const n = { ...prev }; delete n[id]; localStorage.setItem('wl-edge-colors', JSON.stringify(n)); return n; });
     setHiddenCustomEdges(prev => { const n = new Set(prev); n.delete(id); localStorage.setItem('wl-hidden-cedges', JSON.stringify([...n])); return n; });
   }
 
@@ -290,11 +284,11 @@ export default function App() {
   }
 
   function handleEdgeColorChange(id: number, color: string) {
-    setEdgeColors(prev => {
-      const next = { ...prev, [id]: color };
-      localStorage.setItem('wl-edge-colors', JSON.stringify(next));
-      return next;
-    });
+    setCustomEdges(prev => prev.map(e => e.id === id ? { ...e, color } : e));
+    fetch(`/api/edges/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color }),
+    }).catch(() => {});
   }
 
   // ── Auto-edge visibility ───────────────────────────────────────────────────
@@ -511,7 +505,6 @@ export default function App() {
             showAutoEdges={showAutoEdges}
             hiddenAutoEdges={hiddenAutoEdges}
             hiddenCustomEdges={hiddenCustomEdges}
-            edgeColors={edgeColors}
             theme={theme}
             workspaceId={activeWorkspaceId}
             workspaceGroupId={activeWorkspace?.group_id ?? null}
