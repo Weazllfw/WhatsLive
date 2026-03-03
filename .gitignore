@@ -22,7 +22,7 @@ license_private.pem
 
 # Build artefacts
 *.exe
-agent
+/agent
 
 # Private docs
 Docs/whatslive_design_doc.docx
