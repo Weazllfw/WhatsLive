@@ -1,0 +1,37 @@
+# docker-compose.dev.yml — Linux development only.
+#
+# Mounts the source tree into the container and runs `air` for hot reload.
+# The container rebuilds the Go binary automatically on every .go file save.
+#
+# NOTE: This requires a Linux host.  On Windows, --network host maps to the
+#       WSL2 VM, not the physical LAN — use `make run-dev SUBNET=…` instead.
+#
+# Usage (Linux):
+#   SUBNET=192.168.1.0/24 docker compose -f deploy/docker-compose.dev.yml up
+#
+# Pre-requisite: build the dev image once
+#   docker compose -f deploy/docker-compose.dev.yml build
+
+services:
+  whatslive-dev:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.dev
+    container_name: whatslive-dev
+    restart: "no"
+
+    network_mode: host
+    cap_add:
+      - NET_RAW
+
+    environment:
+      - SUBNET=${SUBNET:-}
+
+    volumes:
+      # Mount source for hot reload (Go files only — UI is not embedded in dev)
+      - ..:/workspace
+      # Persist the SQLite database across restarts
+      - whatslive-dev-data:/data
+
+volumes:
+  whatslive-dev-data:

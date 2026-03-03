@@ -1,0 +1,30 @@
+# Air — Go hot-reload for development
+# Install: go install github.com/air-verse/air@latest
+# Usage:   air -- --subnet 192.168.1.0/24
+# Docs:    https://github.com/air-verse/air
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/whatslive ./cmd/agent"
+  bin = "./tmp/whatslive"
+  full_bin = "./tmp/whatslive --subnet ${SUBNET:-}"
+  include_ext = ["go"]
+  exclude_dir  = ["tmp", "dist", "ui", "vendor", "internal/api/ui_static"]
+  delay = 500          # ms to wait after a file change before rebuilding
+  stop_on_error = true
+  send_interrupt = true
+  kill_delay = "1s"
+
+[log]
+  time = false
+
+[color]
+  main    = "magenta"
+  watcher = "cyan"
+  build   = "yellow"
+  runner  = "green"
+
+[misc]
+  clean_on_exit = true

@@ -1,0 +1,43 @@
+services:
+  whatslive:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: whatslive:latest
+    container_name: whatslive
+    restart: unless-stopped
+
+    # REQUIRED: host network gives the agent direct access to the LAN, and
+    # NET_RAW capability enables ICMP. Without NET_RAW, the agent falls back
+    # to TCP-only checks (see README — TCP fallback mode).
+    network_mode: host
+    cap_add:
+      - NET_RAW
+
+    # Pass your subnet here or let it be configured via the web UI.
+    # Uncomment and set SUBNET to skip the first-run setup page:
+    # command: ["--db", "/data/whatslive.db", "--subnet", "192.168.1.0/24"]
+
+    environment:
+      - SUBNET=${SUBNET:-}
+
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        if [ -n "$$SUBNET" ]; then
+          exec /usr/local/bin/whatslive --db /data/whatslive.db --subnet "$$SUBNET"
+        else
+          exec /usr/local/bin/whatslive --db /data/whatslive.db
+        fi
+
+    volumes:
+      - whatslive-data:/data
+
+    ports:
+      # Port mapping is ignored when network_mode: host, but documented here
+      # for reference when running without host networking.
+      - "8080:8080"
+
+volumes:
+  whatslive-data:

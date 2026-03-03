@@ -1,0 +1,39 @@
+# Build output
+dist/
+internal/api/ui_static/
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# Go toolchain cache
+*.test
+*.out
+
+# Node
+ui/node_modules/
+ui/dist/
+
+# Secrets — never commit these
+license_private.pem
+*.env
+.env*
+
+# Build artefacts
+*.exe
+agent
+
+# Private docs
+Docs/whatslive_design_doc.docx
+
+# IDE
+.cursor/
+.idea/
+*.swp
+*.suo
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store

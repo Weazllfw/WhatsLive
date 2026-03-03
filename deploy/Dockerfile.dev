@@ -1,0 +1,18 @@
+# Dockerfile.dev — Linux-only development image with air hot-reload.
+# The React UI is NOT embedded; the agent serves a static placeholder page.
+# Run the Vite dev server separately and point your browser at :5173.
+
+FROM golang:1.24-alpine
+
+RUN apk add --no-cache git && \
+    go install github.com/air-verse/air@latest
+
+WORKDIR /workspace
+
+# Cache dependency downloads
+COPY go.mod go.sum ./
+RUN go mod download
+
+ENTRYPOINT ["sh", "-c", \
+  "if [ -n \"$SUBNET\" ]; then air -- --db /data/whatslive.db --subnet \"$SUBNET\"; \
+   else air -- --db /data/whatslive.db; fi"]
